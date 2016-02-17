@@ -27,7 +27,7 @@ typedef void (^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
 }
 -(void)viewDidAppear:(BOOL)animated{
     [super viewDidAppear:animated];
-    [self.captureSession startRunning];
+    [self.captureSession startRunning];//这里很重要。刚开始做就是忘记startRunning导致预览和拍照功能无法实现
 }
 
 -(void)viewDidDisappear:(BOOL)animated{
@@ -104,8 +104,51 @@ typedef void (^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
         }
     }];
     
-    
 }
+#pragma mark 切换前后摄像头
+- (IBAction)toggleButtonClick:(UIButton *)sender {
+    AVCaptureDevice *currentDevice = [self.captureDeviceInput device];
+    AVCaptureDevicePosition currentPosition = [currentDevice position];
+    [self removeNotificationFromCaptureDevice:currentDevice];
+    AVCaptureDevice *toChangeDevice;
+    AVCaptureDevicePosition toChangePosition = AVCaptureDevicePositionFront;//变化的摄像头初始化为前
+    if (currentPosition == AVCaptureDevicePositionUnspecified || currentPosition == AVCaptureDevicePositionFront) {
+        toChangePosition = AVCaptureDevicePositionBack;//未指明或为前,设为后置摄像头
+    }
+    toChangeDevice = [self getCameraDeviceWithPosition:toChangePosition];
+    //获得要调整的设备输入对象
+    AVCaptureDeviceInput *toChangeDeviceInput = [[AVCaptureDeviceInput alloc]initWithDevice:toChangeDevice error:nil];
+    
+    //改变会话的配置前一定要先开启配置，配置完成后提交配置改变
+    [self.captureSession beginConfiguration];
+    //移除原有输入对象
+    [self.captureSession removeInput:self.captureDeviceInput];
+    //添加新的输入对象
+    if ([self.captureSession canAddInput:toChangeDeviceInput]) {
+        [self.captureSession addInput:toChangeDeviceInput];
+        self.captureDeviceInput = toChangeDeviceInput;
+    }
+    //提交会话配置
+    [self.captureSession commitConfiguration];
+    
+    [self setFlashModeButtonStatus];
+}
+#pragma mark 自动闪光灯开启
+- (IBAction)flashAutoClick:(UIButton *)sender {
+    [self setFlashMode:AVCaptureFlashModeAuto];
+    [self setFlashModeButtonStatus];
+}
+#pragma mark 打开闪光灯
+- (IBAction)flashOnClick:(UIButton *)sender {
+    [self setFlashMode:AVCaptureFlashModeOn];
+    [self setFlashModeButtonStatus];
+}
+#pragma mark 关闭闪光灯
+- (IBAction)flashOffClick:(UIButton *)sender {
+    [self setFlashMode:AVCaptureFlashModeOff];
+    [self setFlashModeButtonStatus];
+}
+
 #pragma mark - 通知
 /**
  *  给输入设备添加通知
@@ -198,7 +241,7 @@ typedef void (^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     NSError *error;
     //注意改变设备属性前一定要首先调用lockForConfiguration:调用完之后使用unlockForConfiguration方法解锁
     if ([captureDevice lockForConfiguration:&error]) {
-        PropertyChangeBlock(captureDevice);
+        propertyChange(captureDevice);
         [captureDevice unlockForConfiguration];
     }else{
         NSLog(@"设置设备属性过程发生错误，错误信息：%@",error.localizedDescription);
@@ -206,16 +249,125 @@ typedef void (^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
 }
 
 /**
+ *  设置闪光灯模式
+ *
+ *  @param flashMode 闪光灯模式
+ */
+-(void)setFlashMode:(AVCaptureFlashMode )flashMode{
+    [self changeDeviceProperty:^(AVCaptureDevice *captureDevice) {
+        if ([captureDevice isFlashModeSupported:flashMode]) {
+            [captureDevice setFlashMode:flashMode];
+        }
+    }];
+}
+/**
+ *  设置聚焦模式
+ *
+ *  @param focusMode 聚焦模式
+ */
+-(void)setFocusMode:(AVCaptureFocusMode )focusMode{
+    [self changeDeviceProperty:^(AVCaptureDevice *captureDevice) {
+        if ([captureDevice isFocusModeSupported:focusMode]) {
+            [captureDevice setFocusMode:focusMode];
+        }
+    }];
+}
+/**
+ *  设置曝光模式
+ *
+ *  @param exposureMode 曝光模式
+ */
+-(void)setExposureMode:(AVCaptureExposureMode)exposureMode{
+    [self changeDeviceProperty:^(AVCaptureDevice *captureDevice) {
+        if ([captureDevice isExposureModeSupported:exposureMode]) {
+            [captureDevice setExposureMode:exposureMode];
+        }
+    }];
+}
+
+/**
  *  添加点按手势，点按时聚焦
  */
 -(void)addGenstureRecognizer{
+    UITapGestureRecognizer *tapGesture = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(tapScreen:)];
+    [self.viewContainer addGestureRecognizer:tapGesture];
+}
+-(void)tapScreen:(UITapGestureRecognizer *)tapGesture{
+    CGPoint point = [tapGesture locationInView:self.viewContainer];
+    //将UI坐标转化为摄像头坐标
+    CGPoint cameraPoint = [self.captureVideoPreviewLayer captureDevicePointOfInterestForPoint:point];
+    [self setFocusCursorWithPoint:point];
+    [self focusWithMode:AVCaptureFocusModeAutoFocus exposureMode:AVCaptureExposureModeAutoExpose atPoint:cameraPoint];
+}
 
+/**
+ *  设置聚焦光标位置
+ *
+ *  @param point 光标位置
+ */
+-(void)setFocusCursorWithPoint:(CGPoint)point{
+    self.focusCursor.center = point;
+    self.focusCursor.transform = CGAffineTransformMakeScale(2.5, 2.5);//设置缩放比例
+    self.focusCursor.alpha = 1.0;
+    [UIView animateWithDuration:1.0 animations:^{
+        self.focusCursor.transform = CGAffineTransformIdentity;
+    } completion:^(BOOL finished) {
+        self.focusCursor.alpha = 0;
+    }];
+}
+/**
+ *  设置聚焦点
+ *
+ *  @param point 聚焦点
+ */
+-(void)focusWithMode:(AVCaptureFocusMode)focusMode exposureMode:(AVCaptureExposureMode)exposureMode atPoint:(CGPoint)point{
+    [self changeDeviceProperty:^(AVCaptureDevice *captureDevice) {
+        if ([captureDevice isFocusModeSupported:focusMode]) {
+            [captureDevice setFocusMode:focusMode];
+        }
+        if ([captureDevice isExposureModeSupported:exposureMode]) {
+            [captureDevice setExposureMode:exposureMode];
+        }
+        if ([captureDevice isFocusPointOfInterestSupported]) {
+            [captureDevice setFocusPointOfInterest:point];
+        }
+        if ([captureDevice isExposurePointOfInterestSupported]) {
+            [captureDevice setExposurePointOfInterest:point];
+        }
+        
+    }];
 }
 /**
  *  设置闪光灯按钮状态
  */
 -(void)setFlashModeButtonStatus{
-
+    AVCaptureDevice *captureDevice = [self.captureDeviceInput device];
+    AVCaptureFlashMode flashMode = captureDevice.flashMode;
+    if ([captureDevice isFlashAvailable]) {
+        self.flashAutoButton.hidden=NO;
+        self.flashOnButton.hidden=NO;
+        self.flashOffButton.hidden=NO;
+        self.flashAutoButton.enabled=YES;
+        self.flashOnButton.enabled=YES;
+        self.flashOffButton.enabled=YES;
+        switch (flashMode) {
+            case AVCaptureFlashModeAuto:
+                self.flashAutoButton.enabled=NO;
+                break;
+            case AVCaptureFlashModeOn:
+                self.flashOnButton.enabled=NO;
+                break;
+            case AVCaptureFlashModeOff:
+                self.flashOffButton.enabled=NO;
+                break;
+            default:
+                break;
+        }
+    }else{
+        self.flashAutoButton.hidden=YES;
+        self.flashOnButton.hidden=YES;
+        self.flashOffButton.hidden=YES;
+    }
     
 }
 @end
