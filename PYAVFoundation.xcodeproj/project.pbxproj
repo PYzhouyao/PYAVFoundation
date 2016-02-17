@@ -15,6 +15,8 @@
 		C5D7CAEF1C735838000267CF /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C5D7CAED1C735838000267CF /* LaunchScreen.storyboard */; };
 		C5D7CAFA1C735839000267CF /* PYAVFoundationTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C5D7CAF91C735839000267CF /* PYAVFoundationTests.m */; };
 		C5D7CB051C735839000267CF /* PYAVFoundationUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = C5D7CB041C735839000267CF /* PYAVFoundationUITests.m */; };
+		C96A5BCF1C7417340029F4F5 /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C96A5BCE1C7417340029F4F5 /* AVFoundation.framework */; };
+		C96A5BD11C74173C0029F4F5 /* AssetsLibrary.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C96A5BD01C74173C0029F4F5 /* AssetsLibrary.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -51,6 +53,8 @@
 		C5D7CB001C735839000267CF /* PYAVFoundationUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PYAVFoundationUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		C5D7CB041C735839000267CF /* PYAVFoundationUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PYAVFoundationUITests.m; sourceTree = "<group>"; };
 		C5D7CB061C735839000267CF /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		C96A5BCE1C7417340029F4F5 /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
+		C96A5BD01C74173C0029F4F5 /* AssetsLibrary.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AssetsLibrary.framework; path = System/Library/Frameworks/AssetsLibrary.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +62,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C96A5BD11C74173C0029F4F5 /* AssetsLibrary.framework in Frameworks */,
+				C96A5BCF1C7417340029F4F5 /* AVFoundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -118,6 +124,8 @@
 			isa = PBXGroup;
 			children = (
 				C5D7CAE01C735838000267CF /* main.m */,
+				C96A5BD01C74173C0029F4F5 /* AssetsLibrary.framework */,
+				C96A5BCE1C7417340029F4F5 /* AVFoundation.framework */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -207,7 +215,7 @@
 				TargetAttributes = {
 					C5D7CADB1C735838000267CF = {
 						CreatedOnToolsVersion = 7.1.1;
-						DevelopmentTeam = 84QQN4B47W;
+						DevelopmentTeam = K48QRF9Y84;
 					};
 					C5D7CAF41C735839000267CF = {
 						CreatedOnToolsVersion = 7.1.1;
@@ -414,6 +422,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = PYAVFoundation/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.yao.zhou.PYAVFoundation;
@@ -425,6 +434,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = PYAVFoundation/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.yao.zhou.PYAVFoundation;
@@ -499,6 +509,7 @@
 				C5D7CB0B1C735839000267CF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		C5D7CB0C1C735839000267CF /* Build configuration list for PBXNativeTarget "PYAVFoundationTests" */ = {
 			isa = XCConfigurationList;
@@ -507,6 +518,7 @@
 				C5D7CB0E1C735839000267CF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		C5D7CB0F1C735839000267CF /* Build configuration list for PBXNativeTarget "PYAVFoundationUITests" */ = {
 			isa = XCConfigurationList;
@@ -515,6 +527,7 @@
 				C5D7CB111C735839000267CF /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
