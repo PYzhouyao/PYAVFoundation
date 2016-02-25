@@ -89,6 +89,20 @@
                                     <action selector="takeButtonClick:" destination="BYZ-38-t0r" eventType="touchUpInside" id="5nq-Do-fbP"/>
                                 </connections>
                             </button>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="VIB-6A-7dV">
+                                <rect key="frame" x="285" y="580" width="70" height="30"/>
+                                <state key="normal" title="录制"/>
+                                <connections>
+                                    <action selector="takeVedioButtonClick:" destination="BYZ-38-t0r" eventType="touchUpInside" id="MDE-eY-FdP"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="9CC-Fe-WIg">
+                                <rect key="frame" x="285" y="623" width="70" height="30"/>
+                                <state key="normal" title="停止录制"/>
+                                <connections>
+                                    <action selector="stopVedioButtonClick:" destination="BYZ-38-t0r" eventType="touchUpInside" id="fOc-0T-uFB"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <animations/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
@@ -103,7 +117,9 @@
                         <outlet property="flashOffButton" destination="YcN-o3-Hds" id="kyZ-fP-Roh"/>
                         <outlet property="flashOnButton" destination="phg-SF-u9W" id="tRh-gi-WMg"/>
                         <outlet property="focusCursor" destination="0S5-yy-5yc" id="MDU-B1-S9Q"/>
+                        <outlet property="stopVideo" destination="9CC-Fe-WIg" id="YGR-m9-ztW"/>
                         <outlet property="takeButton" destination="w8H-zw-alS" id="crr-yj-UIf"/>
+                        <outlet property="takeVideo" destination="VIB-6A-7dV" id="QhF-Yx-YJc"/>
                         <outlet property="viewContainer" destination="KBo-QM-NJe" id="Udn-Cn-PCt"/>
                     </connections>
                 </viewController>

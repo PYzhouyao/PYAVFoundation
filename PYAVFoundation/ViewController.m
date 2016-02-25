@@ -46,33 +46,55 @@ typedef void (^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     if ([_captureSession canSetSessionPreset:AVCaptureSessionPreset1280x720]) {//设置分辨率
         _captureSession.sessionPreset = AVCaptureSessionPreset1280x720;
     }
+    
+    /***********************设备********************/
     //获得输入设备
     AVCaptureDevice *captureDevice = [self getCameraDeviceWithPosition:AVCaptureDevicePositionBack];//取得后置摄像头
     if (!captureDevice) {
         NSLog(@"取得后置摄像头时出现问题.");
         return;
     }
+    //添加一个音频输入设备
+    AVCaptureDevice *audioCaptureDevice = [[AVCaptureDevice devicesWithMediaType:AVMediaTypeAudio] firstObject];
     
+    /***********************设备对象********************/
     NSError *error = nil;
     //根据输入设备初始化设备输入对象，用于获得输入数据
     _captureDeviceInput = [[AVCaptureDeviceInput alloc]initWithDevice:captureDevice error:&error];
+     AVCaptureDeviceInput *audioCaptureDeviceInput = [[AVCaptureDeviceInput alloc]initWithDevice:audioCaptureDevice error:&error];
     if (error) {
         NSLog(@"取得设备输入对象时出错，错误原因：%@",error.localizedDescription);
         return;
     }
+   
     //初始化设备输出对象，用于获得输出数据
     _captureStillImageOutput = [[AVCaptureStillImageOutput alloc]init];
     NSDictionary *outputSettings = @{AVVideoCodecKey:AVVideoCodecJPEG};
     [_captureStillImageOutput setOutputSettings:outputSettings];
     
+    _captureMovieFileOutput = [[AVCaptureMovieFileOutput alloc]init];
+    
+    /***********************设备对象添加到会话********************/
     //将设备输入添加到会话中
     if ([_captureSession canAddInput:_captureDeviceInput]) {
         [_captureSession addInput:_captureDeviceInput];
+    }
+    if ([_captureSession canAddInput:audioCaptureDeviceInput]) {
+        [_captureSession addInput:audioCaptureDeviceInput];
+        AVCaptureConnection *captureConnection = [_captureMovieFileOutput connectionWithMediaType:AVMediaTypeVideo];
+        if ([captureConnection isVideoStabilizationSupported]) {
+            captureConnection.preferredVideoStabilizationMode = AVCaptureVideoStabilizationModeAuto;
+        }
+
     }
     //将设备输出添加到会话中
     if ([_captureSession canAddOutput:_captureStillImageOutput]) {
         [_captureSession addOutput:_captureStillImageOutput];
     }
+    if ([_captureSession canAddOutput:_captureMovieFileOutput]) {
+        [_captureSession addOutput:_captureMovieFileOutput];
+    }
+    
     
     //创建视频预览层，用于实时展示摄像头状态
     _captureVideoPreviewLayer = [[AVCaptureVideoPreviewLayer alloc]initWithSession:_captureSession];
@@ -149,6 +171,45 @@ typedef void (^PropertyChangeBlock)(AVCaptureDevice *captureDevice);
     [self setFlashModeButtonStatus];
 }
 
+#pragma mark 录制视频
+- (IBAction)takeVedioButtonClick:(UIButton *)sender {
+    
+    //根据设备输出获得连接
+    AVCaptureConnection *CaptureConnection = [self.captureMovieFileOutput connectionWithMediaType:AVMediaTypeVideo];
+    
+    //根据连接取得设备输出的数据
+    if (![self.captureMovieFileOutput isRecording]) {
+        self.enableRotation = NO;
+        //如果支持多任务则则开始多任务
+        if ([[UIDevice currentDevice] isMultitaskingSupported]) {
+            self.backgroundTaskIdentifier = [[UIApplication sharedApplication]beginBackgroundTaskWithExpirationHandler:nil];
+        }
+        
+        //预览图层和视频方向保持一致
+        CaptureConnection.videoOrientation = [self.captureVideoPreviewLayer connection].videoOrientation;
+        NSString *outputFilePath = [NSTemporaryDirectory() stringByAppendingString:@"myMovie.mov"];
+        NSLog(@"save path is :%@",outputFilePath);
+        NSURL *fileUrl = [NSURL fileURLWithPath:outputFilePath];
+        [self.captureMovieFileOutput startRecordingToOutputFileURL:fileUrl recordingDelegate:self];
+    }
+    
+}
+
+#pragma mark 停止录制视频
+- (IBAction)stopVedioButtonClick:(UIButton *)sender {
+    if ([self.captureMovieFileOutput isRecording]) {
+        [self.captureMovieFileOutput stopRecording];
+    }
+}
+
+
+
+#pragma mark - 视频输出代理
+-(void)captureOutput:(AVCaptureFileOutput *)captureOutput didStartRecordingToOutputFileAtURL:(NSURL *)fileURL fromConnections:(NSArray *)connections{
+}
+-(void)captureOutput:(AVCaptureFileOutput *)captureOutput didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL fromConnections:(NSArray *)connections error:(NSError *)error{
+    
+}
 #pragma mark - 通知
 /**
  *  给输入设备添加通知
